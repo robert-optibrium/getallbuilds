@@ -22,7 +22,7 @@ node ('macOS') {
         
         stage('Build - macOS') {
             timeout(time: 10, unit: 'MINUTES') {
-               sh '/bin/bash ./runjenk'
+               sh '/bin/bash ./runjenk.sh'
             }
         }
         stage('Artifacts - macOS') {
