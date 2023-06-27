@@ -174,8 +174,8 @@ def get_running_builds(server):
 
 def get_project_data(server):
     projects = get_projects(server)
-    for proj in projects:
-        pprint.pprint(proj)
+    #for proj in projects:
+    #    pprint.pprint(proj)
 
 
 def get_nodes(server, basic):
