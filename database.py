@@ -46,11 +46,11 @@ class Database:
             "DELETE from short_all_builds where displayname='{dn}' and timestamp='{ts}' and duration='{du}'"
         try:
             utils.logprint("Using DB Host index: {i}".format(i=dbconnection))
-            self.creds = json.load(open("creds.json", 'r'))
+            self.creds = json.load(open("creds.config", 'r'))
             self.creds = [x for x in self.creds if x['name'] == dbconnection]
             self.creds = self.creds[0]   #list comprenhension ends up with a list element
         except Exception as e:
-            print("Exception loading creds.json file: {e}".format(e=e))
+            print("Exception loading creds.config file: {e}".format(e=e))
             raise e
         self.engine = self.connect_sshengine(self.creds)
         # Create all tables in the engine. This is equivalent to "Create Table"
