@@ -193,7 +193,8 @@ def get_nodes(server, basic):
             result = requests.get(log_url, auth=basic)
             pass
         else:
-            print("Node {n} doesn't exist".format(n=name))
+            # print("Node {n} doesn't exist".format(n=name))
+            continue
     return nodes
 
 
