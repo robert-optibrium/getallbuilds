@@ -182,6 +182,8 @@ def get_nodes(server, basic):
     nodes = server.get_nodes()
     for node in nodes:
         name = node['name']
+        if ' ' in name:
+            name = name.split(' ')[1]
         if server.node_exists(name):
             node_info = server.get_node_info(name)
             node_config = xmltodict.parse(server.get_node_config(name))  # this call requires auth
@@ -191,7 +193,6 @@ def get_nodes(server, basic):
             result = requests.get(log_url, auth=basic)
             pass
         else:
-            result = urlencode(name, quote_via=quote_plus)
             print("Node {n} doesn't exist".format(n=name))
     return nodes
 
