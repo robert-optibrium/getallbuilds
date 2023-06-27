@@ -1,0 +1,13 @@
+jenkinsapi~=0.3.11
+python-jenkins~=1.7.0
+requests~=2.26.0
+xmltodict~=0.13.0
+SQLAlchemy~=1.4.44
+mysql-connector-python==8.0.28
+PyMySQL==0.10.1
+bs4~=0.0.1
+beautifulsoup4~=4.11.1
+airium~=0.2.5
+matplotlib~=3.6.2
+python-dateutil~=2.8.2
+cryptography~=41.0.1

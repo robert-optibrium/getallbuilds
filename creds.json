@@ -1,0 +1,20 @@
+[
+  {
+    "name": "localhost",
+    "PG_DB_NAME": "jenkinsci_builds",
+    "PG_DB_UN": "jusr",
+    "PG_DB_PW": "jusr",
+    "DB_HOST": "localhost",
+    "PORT": 3306,
+    "jenkins_url": "https://jenkinsci.infra.optibrium.com/"
+  },
+  {
+    "name": "production",
+    "PG_DB_NAME": "jenkinsci_builds",
+    "PG_DB_UN": "jusr",
+    "PG_DB_PW": "jusr",
+    "DB_HOST": "jenkins-db.cp6wpxdlg5ih.eu-west-2.rds.amazonaws.com",
+    "PORT": 3306,
+    "jenkins_url": "https://jenkinsci.infra.optibrium.com/"
+  }
+]

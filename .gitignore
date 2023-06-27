@@ -1,0 +1,6 @@
+__pycache__/*
+.idea/*
+venv/*
+jenkinsapi.log
+all_builds.json
+building.json
