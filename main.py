@@ -15,7 +15,7 @@ import re
 
 
 utils = Utils()
-DB = Database(False, 'localhost')
+DB = Database(False, 'production')
 
 jenkins_url = DB.creds['jenkins_url']
 basic = None
