@@ -15,7 +15,7 @@ import re
 
 
 utils = Utils()
-DB = Database(False, 'production')
+DB = Database(False, 'localhost')
 
 jenkins_url = DB.creds['jenkins_url']
 basic = None
@@ -55,11 +55,43 @@ def get_node_name(server, basic, url):
     soup = BeautifulSoup(page.content, "html.parser")
     ahref = soup.find_all("a", class_="model-link inside")
     if len(ahref) < 1:
-        node_name = ''
+        ###qrybuild = "{h}/api/json?tree=id,timestamp,builtOn&pretty=true".format(h=url)
+        qrybuild = "{h}/api/json?pretty=true".format(h=url)
+        qbpage = requests.get(qrybuild, auth=basic)
+        qbjson = json.loads(qbpage.content)
+        if 'builtOn' in qbjson.keys():
+            node_name = qbjson['builtOn']
+        else:
+            node_name = parse_build_log_for_nodename(url)
+            node_name = "{n}_{i}".format(n=node_name[0],i=node_name[1])
     else:
         node_name = ahref[-1].text
     return node_name
 
+
+def get_limited_request_data(url, limit):
+    r = requests.get(url, auth=basic, stream=True, timeout=10)
+    rcontent = ''
+    for chunk in r.iter_content(1024):
+        if len(chunk)> limit:
+            rcontent += str(chunk.decode("utf-8"))
+            r.close()
+        else:
+            rcontent += str(chunk.decode("utf-8"))
+            r.close()
+            break
+    return rcontent
+
+
+def parse_build_log_for_nodename(url):
+    url = '{u}/consoleText'.format(u=url)
+    page = get_limited_request_data(url, 8192)
+    text = [ x for x in str(page).splitlines() if "Running on" in x]
+    if text and len(text[0]) > 3:
+        text = text[0].split(' ')
+        if len(text) > 4:
+            return(text[3],text[4])  # ec2 fleets generate a name with a space in it, left side is useless info, right side is node
+    return 'no node assigned',''
 
 def get_all_builds(server, basic):
     projects = []
@@ -70,33 +102,40 @@ def get_all_builds(server, basic):
                 if 'folder' in job['_class'] or 'Maintennance' in job['url']:
                     print("\tprocessing job folder")
                     continue
-                print("{j}".format(j=job['fullname']))
-                info = server.get_job_info(job['fullname'])
-                if 'builds' not in info.keys():
-                    print("\tNo builds")
+                try:
+                    print("{j}".format(j=job['fullname']))
+                    info = server.get_job_info(job['fullname'])
+                    if 'builds' not in info.keys():
+                        print("\tNo builds")
+                        continue
+                    builds_info = info['builds']
+                    for build in builds_info:
+                        # print("\t{b}".format(b=build['number']))
+                        build_info = server.get_build_info(job['fullname'], build['number'], depth=2)
+                        timestamp = datetime.utcfromtimestamp(build_info['timestamp']/1e3)
+                        build_info['timestamp'] = str(timestamp)
+                        executor_data = get_node_name(server, basic, build_info['url'])
+                        try:
+                            DB.Exec_Insert_build(displayname=build_info['fullDisplayName'],
+                                                 timestamp=timestamp,
+                                                 duration=build_info['duration'],
+                                                 executor=executor_data,
+                                                 url=build_info['url'])
+                        except Exception as e:
+                            pprint.pprint(e)
+                            pprint.pprint({'displayname': build_info['fullDisplayName'],
+                                           'timestamp': timestamp,
+                                           'duration': build_info['duration'],
+                                           'executor': executor_data,
+                                           'url': build_info['url']})
+                            exit(1)
+                        all_builds.append(build_info)
+                except Exception as e:
+                    print("get_all_builds exception:")
+                    print(job)
+                    print("--")
+                    pprint.pprint(e)
                     continue
-                builds_info = info['builds']
-                for build in builds_info:
-                    # print("\t{b}".format(b=build['number']))
-                    build_info = server.get_build_info(job['fullname'], build['number'])
-                    timestamp = datetime.utcfromtimestamp(build_info['timestamp']/1e3)
-                    build_info['timestamp'] = str(timestamp)
-                    executor_data = get_node_name(server, basic, build_info['url'])
-                    try:
-                        DB.Exec_Insert_build(displayname=build_info['fullDisplayName'],
-                                             timestamp=timestamp,
-                                             duration=build_info['duration'],
-                                             executor=executor_data,
-                                             url=build_info['url'])
-                    except Exception as e:
-                        pprint.pprint(e)
-                        pprint.pprint({'displayname': build_info['fullDisplayName'],
-                                       'timestamp': timestamp,
-                                       'duration': build_info['duration'],
-                                       'executor': executor_data,
-                                       'url': build_info['url']})
-                        exit(1)
-                    all_builds.append(build_info)
                 pass
     return all_builds
 
